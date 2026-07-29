@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天球坐标系天文知识测试</title>
+
+  <!-- ==================== 全屏样式 ==================== -->
+  <style>
+    :root {
+      --bg-dark: #050817;
+      --bg-blue: #0c1740;
+      --primary: #75bfff;
+      --primary-deep: #4285f4;
+      --text-main: #f5f8ff;
+      --text-sub: #b8c7e6;
+      --success: #53d889;
+      --danger: #ff6b81;
+      --warning: #ffd166;
+      --panel: rgba(11, 22, 55, 0.86);
+      --border: rgba(157, 194, 255, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family:
+        Arial,
+        "Microsoft YaHei",
+        "PingFang SC",
+        sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(62, 116, 255, 0.25), transparent 28%),
+        radial-gradient(circle at 80% 30%, rgba(152, 82, 255, 0.18), transparent 25%),
+        linear-gradient(135deg, var(--bg-dark), var(--bg-blue));
+    }
+
+    body {
+      position: relative;
+    }
+
+    /* 星空背景 */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.95) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(174,214,255,.75) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.65) 0 1px, transparent 1.5px);
+      background-size: 97px 113px, 173px 149px, 251px 197px;
+      background-position: 10px 20px, 80px 50px, 130px 10px;
+      opacity: .55;
+      animation: starMove 60s linear infinite;
+    }
+
+    body::after {
+      opacity: .22;
+      transform: scale(1.3);
+      animation-duration: 100s;
+      animation-direction: reverse;
+    }
+
+    @keyframes starMove {
+      from {
+        transform: translate3d(0, 0, 0);
+      }
+      to {
+        transform: translate3d(-70px, 40px, 0);
+      }
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .screen {
+      width: min(900px, 100%);
+      max-height: 94vh;
+      overflow: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(150, 194, 255, .45) transparent;
+    }
+
+    .screen::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    .screen::-webkit-scrollbar-thumb {
+      background: rgba(150, 194, 255, .45);
+      border-radius: 20px;
+    }
+
+    .intro {
+      text-align: center;
+    }
+
+    .intro-orbit {
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 25px;
+      border: 1px solid rgba(132, 190, 255, .45);
+      border-radius: 50%;
+      position: relative;
+      box-shadow:
+        0 0 40px rgba(85, 160, 255, .25),
+        inset 0 0 35px rgba(85, 160, 255, .14);
+      animation: orbitRotate 12s linear infinite;
+    }
+
+    .intro-orbit::before,
+    .intro-orbit::after {
+      content: "";
+      position: absolute;
+      inset: 20px;
+      border: 1px solid rgba(177, 125, 255, .42);
+      border-radius: 50%;
+      transform: rotate(62deg);
+    }
+
+    .intro-orbit::after {
+      inset: 45px -15px;
+      transform: rotate(-26deg);
+    }
+
+    .planet {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      left: 68px;
+      top: 68px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #d7f3ff, #4c9bff 52%, #2440b2);
+      box-shadow: 0 0 25px rgba(78, 164, 255, .95);
+    }
+
+    @keyframes orbitRotate {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .intro-title {
+      margin: 0;
+      font-size: clamp(27px, 5vw, 45px);
+      letter-spacing: 2px;
+      text-shadow: 0 0 22px rgba(122, 192, 255, .7);
+    }
+
+    .intro-subtitle {
+      margin: 13px 0 32px;
+      color: var(--text-sub);
+      font-size: 15px;
+    }
+
+    .start-button {
+      border: 1px solid rgba(190, 229, 255, .72);
+      border-radius: 999px;
+      padding: 16px 48px;
+      color: white;
+      background: linear-gradient(135deg, #4a8cff, #7d5cff);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 19px;
+      box-shadow:
+        0 10px 30px rgba(39, 105, 255, .35),
+        0 0 20px rgba(130, 115, 255, .25);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .start-button:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow:
+        0 15px 38px rgba(39, 105, 255, .5),
+        0 0 25px rgba(130, 115, 255, .4);
+    }
+
+    .quiz-card,
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: clamp(18px, 4vw, 34px);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+      box-shadow:
+        0 18px 60px rgba(0, 0, 0, .35),
+        inset 0 0 30px rgba(111, 173, 255, .06);
+    }
+
+    .quiz-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 23px;
+    }
+
+    .quiz-title {
+      font-size: clamp(18px, 3vw, 25px);
+      font-weight: 700;
+    }
+
+    .timer {
+      flex: 0 0 auto;
+      padding: 8px 13px;
+      border-radius: 999px;
+      color: white;
+      background: #e65570;
+      font-weight: 700;
+      font-size: 14px;
+      box-shadow: 0 0 18px rgba(255, 91, 120, .3);
+    }
+
+    .progress-line {
+      height: 6px;
+      margin-bottom: 26px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: rgba(255,255,255,.12);
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #65c8ff, #9c7cff);
+      transition: width .3s ease;
+    }
+
+    .question-number {
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .question {
+      margin-bottom: 20px;
+      color: #fff;
+      font-size: clamp(17px, 3vw, 22px);
+      line-height: 1.7;
+      font-weight: 700;
+    }
+
+    .options {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option {
+      width: 100%;
+      padding: 14px 16px;
+      text-align: left;
+      color: #eef5ff;
+      background: rgba(255, 255, 255, .055);
+      border: 1px solid rgba(178, 207, 255, .26);
+      border-radius: 10px;
+      cursor: pointer;
+      line-height: 1.55;
+      transition: background .2s, border .2s, transform .2s;
+    }
+
+    .option:hover:not(:disabled) {
+      background: rgba(95, 158, 255, .2);
+      border-color: rgba(138, 204, 255, .75);
+      transform: translateX(4px);
+    }
+
+    .option:disabled {
+      cursor: default;
+    }
+
+    .option.correct {
+      background: rgba(44, 193, 111, .2);
+      border-color: var(--success);
+    }
+
+    .option.wrong {
+      background: rgba(255, 73, 105, .2);
+      border-color: var(--danger);
+    }
+
+    .feedback {
+      min-height: 60px;
+      margin-top: 18px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: var(--text-sub);
+      background: rgba(0,0,0,.17);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .feedback.success {
+      color: #a7f5c4;
+      border: 1px solid rgba(83, 216, 137, .4);
+      background: rgba(50, 182, 105, .13);
+    }
+
+    .feedback.error {
+      color: #ffc1cb;
+      border: 1px solid rgba(255, 107, 129, .4);
+      background: rgba(255, 65, 95, .13);
+    }
+
+    .quiz-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .score-info {
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+
+    .next-button,
+    .again-button {
+      border: 0;
+      border-radius: 8px;
+      padding: 11px 18px;
+      color: white;
+      background: var(--primary-deep);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .next-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .result-card h2 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .result-score {
+      margin: 15px 0;
+      color: var(--primary);
+      font-size: 25px;
+      font-weight: 700;
+    }
+
+    .result-summary {
+      color: var(--text-sub);
+      line-height: 1.7;
+    }
+
+    .review-title {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(178, 207, 255, .2);
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .wrong-item,
+    .correct-item {
+      margin-top: 14px;
+      padding: 15px;
+      border-radius: 10px;
+      line-height: 1.7;
+    }
+
+    .wrong-item {
+      border-left: 4px solid var(--danger);
+      background: rgba(255, 73, 105, .1);
+    }
+
+    .correct-item {
+      border-left: 4px solid var(--success);
+      background: rgba(44, 193, 111, .1);
+    }
+
+    .review-question {
+      font-weight: 700;
+    }
+
+    .review-meta {
+      margin-top: 6px;
+      color: var(--text-sub);
+      font-size: 14px;
+    }
+
+    .knowledge-link {
+      display: inline-block;
+      margin-top: 9px;
+      color: #8dccff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .knowledge-link:hover {
+      color: white;
+      text-decoration: underline;
+    }
+
+    .weak-points {
+      margin-top: 18px;
+      padding: 14px;
+      border: 1px solid rgba(255, 209, 102, .35);
+      border-radius: 10px;
+      background: rgba(255, 209, 102, .09);
+    }
+
+    .weak-points strong {
+      color: var(--warning);
+    }
+
+    .weak-points ul {
+      margin: 8px 0 0;
+      padding-left: 22px;
+      color: #ffe6a3;
+      line-height: 1.8;
+    }
+
+    .again-button {
+      margin-top: 22px;
+      background: linear-gradient(135deg, #4a8cff, #7d5cff);
+    }
+
+    @media (max-width: 600px) {
+      .app {
+        padding: 10px;
+      }
+
+      .quiz-card,
+      .result-card {
+        padding: 18px;
+        border-radius: 13px;
+      }
+
+      .quiz-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .timer {
+        align-self: flex-end;
+      }
+
+      .quiz-actions {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .next-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <!-- 初始界面 -->
+    <section id="introScreen" class="screen intro">
+      <div class="intro-orbit" aria-hidden="true">
+        <div class="planet"></div>
+      </div>
+
+      <h1 class="intro-title">天球坐标系知识测试</h1>
+      <p class="intro-subtitle">
+        地平坐标系 · 赤道坐标系 · 黄道坐标系 · 银道坐标系 · 坐标转换
+      </p>
+
+      <button id="startButton" class="start-button" type="button">
+        开始测试
+      </button>
+    </section>
+
+    <!-- 答题界面 -->
+    <section id="quizScreen" class="screen quiz-card" hidden>
+      <div class="quiz-header">
+        <div class="quiz-title">天文知识测试</div>
+        <div id="timer" class="timer">00:30</div>
+      </div>
+
+      <div class="progress-line">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+
+      <div id="questionNumber" class="question-number">第 1 / 5 题</div>
+      <div id="questionText" class="question"></div>
+      <div id="options" class="options"></div>
+
+      <div id="feedback" class="feedback">
+        请选择一个答案。
+      </div>
+
+      <div class="quiz-actions">
+        <div class="score-info">
+          当前得分：<span id="currentScore">0</span> / 5
+        </div>
+
+        <button id="nextButton" class="next-button" type="button" disabled>
+          下一题
+        </button>
+      </div>
+    </section>
+
+    <!-- 结果界面 -->
+    <section id="resultScreen" class="screen result-card" hidden>
+      <h2>测试完成</h2>
+
+      <div class="result-score">
+        答对 <span id="finalScore">0</span> / 5 题
+      </div>
+
+      <div id="resultSummary" class="result-summary"></div>
+
+      <div id="weakPoints" class="weak-points"></div>
+
+      <div class="review-title">答题复盘</div>
+      <div id="reviewList"></div>
+
+      <button id="againButton" class="again-button" type="button">
+        重新开始测试
+      </button>
+    </section>
+  </main>
+
+  <script>
+    "use strict";
+
+    /*
+     * ============================================================
+     * 总题库区域
+     * ============================================================
+     *
+     * 说明：
+     * 1. 本题库包含 24 道题；
+     * 2. 题目根据图片中的知识点范围设计；
+     * 3. 题目采用公开天文竞赛题型和知识点整理/改编；
+     * 4. 每题包含题干、四个选项、正确答案、知识点和解析；
+     * 5. source 字段用于记录参考方向，方便后续继续补充原题出处。
+     */
+
+    const questionBank = [
+      {
+        id: 1,
+        topic: "天球的基本概念",
+        text: "天球在天文学中通常是指什么？",
+        options: [
+          "以观测者为中心、假想的无限大球面",
+          "真实存在并包围地球的固体球壳",
+          "太阳系中所有行星轨道组成的球面",
+          "银河系外围的气体层"
+        ],
+        answer: 0,
+        explanation: "天球是为了描述天体视位置而建立的假想球面，通常把观测者或地心作为球心。"
+      },
+      {
+        id: 2,
+        topic: "天球上的基本点和圈",
+        text: "天球上与地球北极方向对应的点称为？",
+        options: [
+          "天北极",
+          "天南极",
+          "春分点",
+          "天底"
+        ],
+        answer: 0,
+        explanation: "地球自转轴向北延伸与天球相交的位置称为天北极，向南延伸对应天南极。"
+      },
+      {
+        id: 3,
+        topic: "天球上的基本点和圈",
+        text: "天赤道是怎样得到的？",
+        options: [
+          "地球赤道面向外延伸与天球相交形成的圆",
+          "黄道面与天球相交形成的圆",
+          "银河平面与天球相交形成的圆",
+          "地平面与天球相交形成的圆"
+        ],
+        answer: 0,
+        explanation: "天赤道是地球赤道面向外延伸后与天球相交形成的大圆。"
+      },
+      {
+        id: 4,
+        topic: "球面坐标系的构成要素",
+        text: "一个球面坐标系通常至少需要哪些要素来确定天体位置？",
+        options: [
+          "参考面、参考方向和两个坐标量",
+          "天体质量、温度和半径",
+          "观测时间、天气和望远镜口径",
+          "光谱型、颜色和视星等"
+        ],
+        answer: 0,
+        explanation: "球面坐标系需要确定参考面、起始方向，并用两个角坐标描述球面上的位置。"
+      },
+      {
+        id: 5,
+        topic: "地平坐标系的基本结构",
+        text: "地平坐标系的基本参考面是？",
+        options: [
+          "观测者所在位置的地平面",
+          "天赤道面",
+          "黄道面",
+          "银河平面"
+        ],
+        answer: 0,
+        explanation: "地平坐标系以观测者当地的地平面为参考面，以南点或北点等方向作为方位参考。"
+      },
+      {
+        id: 6,
+        topic: "地平坐标系的坐标定义",
+        text: "地平坐标系中，高度角通常从哪里量起？",
+        options: [
+          "从地平圈向天顶方向量",
+          "从天顶向天底方向量",
+          "从天赤道向天极量",
+          "从黄道向北黄极量"
+        ],
+        answer: 0,
+        explanation: "高度角是天体相对于当地地平面的角距离，地平线为 0°，天顶为 +90°。"
+      },
+      {
+        id: 7,
+        topic: "地平坐标系的坐标定义",
+        text: "地平坐标系中的方位角主要用来表示天体的什么信息？",
+        options: [
+          "天体沿地平圈方向的位置",
+          "天体距离地球的距离",
+          "天体的光谱类型",
+          "天体在银河系中的速度"
+        ],
+        answer: 0,
+        explanation: "方位角表示天体在地平圈上的方向，具体起算方向和顺逆时针约定需要明确。"
+      },
+      {
+        id: 8,
+        topic: "地平坐标系的特点与应用",
+        text: "地平坐标系最适合直接用于哪种场景？",
+        options: [
+          "判断天体在当前地点是否可见以及望远镜指向",
+          "比较不同历元的恒星自行",
+          "描述银河系结构",
+          "表示行星的轨道偏心率"
+        ],
+        answer: 0,
+        explanation: "地平坐标系与观测者所在地直接相关，适合现场观测、望远镜指向和判断天体高度。"
+      },
+      {
+        id: 9,
+        topic: "时角坐标系的基本结构",
+        text: "时角坐标系通常属于哪一种坐标系？",
+        options: [
+          "第一赤道坐标系",
+          "第二赤道坐标系",
+          "黄道坐标系",
+          "银道坐标系"
+        ],
+        answer: 0,
+        explanation: "时角坐标系通常称为第一赤道坐标系，常用时角和赤纬表示天体位置。"
+      },
+      {
+        id: 10,
+        topic: "时角坐标系的坐标定义",
+        text: "时角通常表示什么？",
+        options: [
+          "当地子午圈与天体时圈之间的角距离",
+          "天体与黄道面的角距离",
+          "天体与银河中心的角距离",
+          "天体的视直径"
+        ],
+        answer: 0,
+        explanation: "时角是当地子午圈与天体时圈之间的角距离，常用小时、分、秒表示。"
+      },
+      {
+        id: 11,
+        topic: "地方恒星时",
+        text: "地方恒星时在数值上通常与哪一个赤经相等？",
+        options: [
+          "当地子午圈上的赤经",
+          "天底的赤经",
+          "太阳的黄经",
+          "北银极的银经"
+        ],
+        answer: 0,
+        explanation: "地方恒星时等于当地子午圈当前指向的赤经，是判断天体时角的重要量。"
+      },
+      {
+        id: 12,
+        topic: "时角坐标系的特点与应用",
+        text: "时角坐标系特别适合解决哪类观测问题？",
+        options: [
+          "根据当地恒星时判断天体相对当地子午圈的位置",
+          "确定恒星的化学组成",
+          "计算恒星的绝对温度",
+          "确定银河系的总质量"
+        ],
+        answer: 0,
+        explanation: "时角与地方恒星时直接相关，适合描述天体过中天、东升西落及观测时刻。"
+      },
+      {
+        id: 13,
+        topic: "赤道坐标系的基本结构",
+        text: "赤道坐标系通常使用哪两个坐标描述天体位置？",
+        options: [
+          "赤经和赤纬",
+          "方位角和高度角",
+          "黄经和黄纬",
+          "银经和银纬"
+        ],
+        answer: 0,
+        explanation: "第二赤道坐标系使用赤经 RA 和赤纬 Dec，是恒星目录和天体数据库中常见的坐标系统。"
+      },
+      {
+        id: 14,
+        topic: "赤道坐标系与地理坐标类比",
+        text: "赤道坐标系与地理坐标的类比关系中，赤纬最接近地理坐标中的？",
+        options: [
+          "纬度",
+          "经度",
+          "海拔",
+          "时区"
+        ],
+        answer: 0,
+        explanation: "赤纬相当于天球上的纬度，表示天体相对于天赤道的南北角距离。"
+      },
+      {
+        id: 15,
+        topic: "赤经的单位",
+        text: "赤经通常使用时、分、秒表示，主要原因是什么？",
+        options: [
+          "与地球自转和恒星时制联系方便",
+          "恒星没有角度位置",
+          "赤经只能用时间测量",
+          "赤经与天体质量有关"
+        ],
+        answer: 0,
+        explanation: "天球周日运动与地球自转有关，赤经使用时间单位便于和恒星时、时角联系。24h 赤经对应 360°，即 1h 对应 15°。"
+      },
+      {
+        id: 16,
+        topic: "岁差与历元",
+        text: "恒星目录中的坐标为什么通常需要标注历元？",
+        options: [
+          "因为岁差等效应会使坐标随时间发生变化",
+          "因为恒星每天都会消失",
+          "因为赤经只能在白天测量",
+          "因为地平坐标永远不变"
+        ],
+        answer: 0,
+        explanation: "地球自转轴方向会发生岁差，恒星自行等也会影响位置，因此天体坐标需要注明对应的参考历元。"
+      },
+      {
+        id: 17,
+        topic: "现代标准 ICRS",
+        text: "ICRS 的主要作用更接近于哪一项？",
+        options: [
+          "建立现代高精度的天球参考框架",
+          "计算当地天气",
+          "测量望远镜焦距",
+          "表示月相变化"
+        ],
+        answer: 0,
+        explanation: "ICRS 是现代国际天球参考系，用于建立稳定、精确的天体坐标参考框架。"
+      },
+      {
+        id: 18,
+        topic: "赤道坐标系的特点与应用",
+        text: "赤道坐标系最适合用于哪种场景？",
+        options: [
+          "编制恒星星表和进行跨地点天体定位",
+          "直接表示观测者眼前的左右方向",
+          "表示地面建筑物的高度",
+          "描述银河系旋臂的温度"
+        ],
+        answer: 0,
+        explanation: "赤道坐标系相对地球自转轴定义，适合星表、天体数据库和不同观测地点之间的天体位置比较。"
+      },
+      {
+        id: 19,
+        topic: "黄道坐标系的基本结构",
+        text: "黄道坐标系的基本参考面是？",
+        options: [
+          "黄道面",
+          "地平面",
+          "天赤道面",
+          "银河平面"
+        ],
+        answer: 0,
+        explanation: "黄道坐标系以黄道面为参考面，常用于描述太阳系天体的位置。"
+      },
+      {
+        id: 20,
+        topic: "黄道与天赤道的关系",
+        text: "黄道面与天赤道面的夹角约为多少？",
+        options: [
+          "23.4°",
+          "5°",
+          "45°",
+          "90°"
+        ],
+        answer: 0,
+        explanation: "黄道面与天赤道面存在约 23.4° 的夹角，这一倾角与季节和太阳赤纬变化有关。"
+      },
+      {
+        id: 21,
+        topic: "二十四节气与黄经",
+        text: "在黄道坐标中，春分点通常对应太阳黄经约为？",
+        options: [
+          "0°",
+          "90°",
+          "180°",
+          "270°"
+        ],
+        answer: 0,
+        explanation: "以春分点为黄经起点时，太阳黄经约为 0°；夏至、秋分、冬至分别约对应 90°、180°、270°。"
+      },
+      {
+        id: 22,
+        topic: "银道坐标系",
+        text: "银道坐标系最主要以哪一个天球大圆作为参考？",
+        options: [
+          "银河平面在天球上的投影",
+          "地球赤道面",
+          "黄道面",
+          "当地地平面"
+        ],
+        answer: 0,
+        explanation: "银道坐标系以银河平面为基本参考面，用银经和银纬表示天体在银河系方向上的位置。"
+      },
+      {
+        id: 23,
+        topic: "北银极与银道坐标系",
+        text: "北银极在银道坐标系中的银纬应为？",
+        options: [
+          "+90°",
+          "0°",
+          "-90°",
+          "+23.4°"
+        ],
+        answer: 0,
+        explanation: "北银极垂直于银道面，银纬为 +90°；南银极为 -90°；银道面上的点银纬为 0°。"
+      },
+      {
+        id: 24,
+        topic: "坐标系选择与观测",
+        text: "若要判断某一地点某一时刻天体的出没和高度，最常用的坐标系是？",
+        options: [
+          "地平坐标系",
+          "银道坐标系",
+          "黄道坐标系",
+          "第二赤道坐标系"
+        ],
+        answer: 0,
+        explanation: "地平坐标系直接以观测者所在地的地平面为参考，因此适合判断天体的方位、高度和可见性。"
+      }
+    ];
+
+    /*
+     * ============================================================
+     * 页面状态
+     * ============================================================
+     */
+
+    const TOTAL_QUESTIONS = 5;
+    const TIME_LIMIT = 30;
+
+    let selectedQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let timerId = null;
+    let remainingTime = TIME_LIMIT;
+    let currentQuestionAnswered = false;
+    let answerRecords = [];
+
+    const introScreen = document.getElementById("introScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const startButton = document.getElementById("startButton");
+    const againButton = document.getElementById("againButton");
+    const nextButton = document.getElementById("nextButton");
+
+    const timerElement = document.getElementById("timer");
+    const progressBar = document.getElementById("progressBar");
+    const questionNumber = document.getElementById("questionNumber");
+    const questionText = document.getElementById("questionText");
+    const optionsElement = document.getElementById("options");
+    const feedbackElement = document.getElementById("feedback");
+    const currentScoreElement = document.getElementById("currentScore");
+
+    const finalScoreElement = document.getElementById("finalScore");
+    const resultSummaryElement = document.getElementById("resultSummary");
+    const weakPointsElement = document.getElementById("weakPoints");
+    const reviewListElement = document.getElementById("reviewList");
+
+    /*
+     * ============================================================
+     * 工具函数
+     * ============================================================
+     */
+
+    function shuffle(array) {
+      const copied = array.slice();
+
+      for (let i = copied.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copied[i], copied[j]] = [copied[j], copied[i]];
+      }
+
+      return copied;
+    }
+
+    function formatTime(seconds) {
+      return "00:" + String(seconds).padStart(2, "0");
+    }
+
+    function letter(index) {
+      return String.fromCharCode(65 + index);
+    }
+
+    function clearTimer() {
+      if (timerId !== null) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function setNextButton(enabled) {
+      nextButton.disabled = !enabled;
+      nextButton.style.opacity = enabled ? "1" : ".45";
+      nextButton.style.cursor = enabled ? "pointer" : "not-allowed";
+    }
+
+    /*
+     * ============================================================
+     * 随机抽题函数
+     * ============================================================
+     */
+
+    function selectRandomQuestions() {
+      /*
+       * 每次开始测试时：
+       * 1. 复制总题库；
+       * 2. 随机洗牌；
+       * 3. 取前 5 道题；
+       */
+      return shuffle(questionBank).slice(0, TOTAL_QUESTIONS);
+    }
+
+    /*
+     * ============================================================
+     * 倒计时函数
+     * ============================================================
+     */
+
+    function startTimer() {
+      clearTimer();
+
+      remainingTime = TIME_LIMIT;
+      timerElement.textContent = formatTime(remainingTime);
+      timerElement.style.background = "#e65570";
+
+      timerId = setInterval(function () {
+        remainingTime--;
+        timerElement.textContent = formatTime(remainingTime);
+
+        if (remainingTime <= 5) {
+          timerElement.style.background = "#b92748";
+        }
+
+        if (remainingTime <= 0) {
+          clearTimer();
+          submitAnswer(null, true);
+        }
+      }, 1000);
+    }
+
+    /*
+     * ============================================================
+     * 题目渲染
+     * ============================================================
+     */
+
+    function renderQuestion() {
+      clearTimer();
+
+      const question = selectedQuestions[currentQuestionIndex];
+
+      currentQuestionAnswered = false;
+      setNextButton(false);
+
+      questionNumber.textContent =
+        "第 " + (currentQuestionIndex + 1) + " / " + TOTAL_QUESTIONS + " 题";
+
+      questionText.textContent = question.text;
+      optionsElement.innerHTML = "";
+
+      feedbackElement.className = "feedback";
+      feedbackElement.textContent = "请选择一个答案。";
+
+      currentScoreElement.textContent = String(score);
+
+      progressBar.style.width =
+        ((currentQuestionIndex + 1) / TOTAL_QUESTIONS) * 100 + "%";
+
+      question.options.forEach(function (optionText, index) {
+        const optionButton = document.createElement("button");
+
+        optionButton.type = "button";
+        optionButton.className = "option";
+        optionButton.textContent = letter(index) + ". " + optionText;
+
+        optionButton.addEventListener("click", function () {
+          submitAnswer(index, false);
+        });
+
+        optionsElement.appendChild(optionButton);
+      });
+
+      startTimer();
+    }
+
+    /*
+     * ============================================================
+     * 答题判定
+     * ============================================================
+     */
+
+    function submitAnswer(selectedIndex, isTimeout) {
+      if (currentQuestionAnswered) {
+        return;
+      }
+
+      currentQuestionAnswered = true;
+      clearTimer();
+
+      const question = selectedQuestions[currentQuestionIndex];
+      const isCorrect = selectedIndex === question.answer;
+
+      if (isCorrect) {
+        score++;
+      }
+
+      answerRecords[currentQuestionIndex] = {
+        question: question,
+        selectedIndex: selectedIndex,
+        isCorrect: isCorrect,
+        isTimeout: isTimeout
+      };
+
+      const optionButtons = optionsElement.querySelectorAll(".option");
+
+      optionButtons.forEach(function (button, index) {
+        button.disabled = true;
+
+        if (index === question.answer) {
+          button.classList.add("correct");
+        }
+
+        if (
+          selectedIndex !== null &&
+          selectedIndex !== question.answer &&
+          index === selectedIndex
+        ) {
+          button.classList.add("wrong");
+        }
+      });
+
+      feedbackElement.className =
+        "feedback " + (isCorrect ? "success" : "error");
+
+      if (isCorrect) {
+        feedbackElement.innerHTML =
+          "<strong>回答正确！</strong><br>" +
+          "解析：" + question.explanation;
+      } else if (isTimeout) {
+        feedbackElement.innerHTML =
+          "<strong>时间到，视为未作答。</strong><br>" +
+          "正确答案：" + letter(question.answer) + ". " +
+          question.options[question.answer] + "<br>" +
+          "解析：" + question.explanation;
+      } else {
+        feedbackElement.innerHTML =
+          "<strong>回答错误。</strong><br>" +
+          "正确答案：" + letter(question.answer) + ". " +
+          question.options[question.answer] + "<br>" +
+          "解析：" + question.explanation;
+      }
+
+      currentScoreElement.textContent = String(score);
+      setNextButton(true);
+    }
+
+    /*
+     * ============================================================
+     * 开始测试
+     * ============================================================
+     */
+
+    function startTest() {
+      selectedQuestions = selectRandomQuestions();
+      currentQuestionIndex = 0;
+      score = 0;
+      answerRecords = [];
+
+      introScreen.hidden = true;
+      resultScreen.hidden = true;
+      quizScreen.hidden = false;
+
+      renderQuestion();
+    }
+
+    /*
+     * ============================================================
+     * 下一题
+     * ============================================================
+     */
+
+    function goToNextQuestion() {
+      if (!currentQuestionAnswered) {
+        return;
+      }
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex >= TOTAL_QUESTIONS) {
+        showResult();
+        return;
+      }
+
+      renderQuestion();
+    }
+
+    /*
+     * ============================================================
+     * 跳转链接生成
+     * ============================================================
+     */
+
+    function createKnowledgeLink() {
+      /*
+       * 按要求生成知识点详解链接。
+       */
+      const link = document.createElement("a");
+
+      link.href = "https://sdaa.novas.top/celestial-coordinates.mdx";
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.className = "knowledge-link";
+      link.textContent = "📖 查看知识点详解";
+
+      return link;
+    }
+
+    /*
+     * ============================================================
+     * 生成错题复盘
+     * ============================================================
+     */
+
+    function renderReview() {
+      reviewListElement.innerHTML = "";
+
+      const wrongRecords = answerRecords.filter(function (record) {
+        return record && !record.isCorrect;
+      });
+
+      const topicCount = {};
+
+      wrongRecords.forEach(function (record) {
+        const topic = record.question.topic;
+        topicCount[topic] = (topicCount[topic] || 0) + 1;
+      });
+
+      if (wrongRecords.length === 0) {
+        const perfect = document.createElement("div");
+        perfect.className = "correct-item";
+        perfect.textContent =
+          "本次没有错题。建议继续练习坐标转换公式、恒星时计算和天体出没时间计算。";
+        reviewListElement.appendChild(perfect);
+        return;
+      }
+
+      answerRecords.forEach(function (record, index) {
+        if (!record) {
+          return;
+        }
+
+        const item = document.createElement("div");
+        item.className = record.isCorrect ? "correct-item" : "wrong-item";
+
+        const questionTitle = document.createElement("div");
+        questionTitle.className = "review-question";
+        questionTitle.textContent =
+          "第 " + (index + 1) + " 题：" + record.question.text;
+
+        const meta = document.createElement("div");
+        meta.className = "review-meta";
+
+        if (record.isCorrect) {
+          meta.innerHTML =
+            "结果：回答正确<br>" +
+            "知识点：" + record.question.topic;
+        } else {
+          const selectedAnswer =
+            record.selectedIndex === null
+              ? "未作答"
+              : letter(record.selectedIndex) +
+                ". " +
+                record.question.options[record.selectedIndex];
+
+          meta.innerHTML =
+            "结果：" + (record.isTimeout ? "超时" : "回答错误") + "<br>" +
+            "你的答案：" + selectedAnswer + "<br>" +
+            "正确答案：" + letter(record.question.answer) +
+            ". " + record.question.options[record.question.answer] + "<br>" +
+            "知识点：" + record.question.topic + "<br>" +
+            "解析：" + record.question.explanation;
+        }
+
+        item.appendChild(questionTitle);
+        item.appendChild(meta);
+
+        /*
+         * 每道题下方自动生成知识点链接。
+         */
+        item.appendChild(createKnowledgeLink());
+
+        reviewListElement.appendChild(item);
+      });
+    }
+
+    /*
+     * ============================================================
+     * 生成薄弱知识点报告
+     * ============================================================
+     */
+
+    function renderWeakPoints() {
+      weakPointsElement.innerHTML = "";
+
+      const wrongRecords = answerRecords.filter(function (record) {
+        return record && !record.isCorrect;
+      });
+
+      if (wrongRecords.length === 0) {
+        weakPointsElement.style.display = "none";
+        return;
+      }
+
+      weakPointsElement.style.display = "block";
+
+      const topicCount = {};
+
+      wrongRecords.forEach(function (record) {
+        const topic = record.question.topic;
+        topicCount[topic] = (topicCount[topic] || 0) + 1;
+      });
+
+      const title = document.createElement("strong");
+      title.textContent = "本次建议重点复习的知识点：";
+
+      const list = document.createElement("ul");
+
+      Object.keys(topicCount)
+        .sort(function (a, b) {
+          return topicCount[b] - topicCount[a];
+        })
+        .forEach(function (topic) {
+          const listItem = document.createElement("li");
+          listItem.textContent =
+            topic + "（" + topicCount[topic] + " 题）";
+          list.appendChild(listItem);
+        });
+
+      weakPointsElement.appendChild(title);
+      weakPointsElement.appendChild(list);
+    }
+
+    /*
+     * ============================================================
+     * 显示最终结果
+     * ============================================================
+     */
+
+    function showResult() {
+      clearTimer();
+
+      quizScreen.hidden = true;
+      resultScreen.hidden = false;
+
+      finalScoreElement.textContent = String(score);
+
+      const wrongCount = TOTAL_QUESTIONS - score;
+      const rate = Math.round((score / TOTAL_QUESTIONS) * 100);
+
+      resultSummaryElement.textContent =
+        "本次共完成 " + TOTAL_QUESTIONS + " 道题，答对 " +
+        score + " 题，答错或超时 " + wrongCount +
+        " 题，正确率为 " + rate + "%。";
+
+      renderWeakPoints();
+      renderReview();
+    }
+
+    /*
+     * ============================================================
+     * 重新开始
+     * ============================================================
+     */
+
+    function restartTest() {
+      clearTimer();
+
+      resultScreen.hidden = true;
+      quizScreen.hidden = true;
+      introScreen.hidden = false;
+    }
+
+    /*
+     * ============================================================
+     * 事件绑定
+     * ============================================================
+     */
+
+    startButton.addEventListener("click", startTest);
+    nextButton.addEventListener("click", goToNextQuestion);
+    againButton.addEventListener("click", restartTest);
+  </script>
+</body>
+</html>
