@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>天球坐标知识测试</title>
+  <style>
+    /* ========== 基础重置与全局背景 ========== */
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%;
+      margin: 0; overflow: hidden;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      color: #fff;
+      background: #030817;
+    }
+
+    body {
+      position: relative; min-height: 100vh;
+      background: radial-gradient(circle at center, #102653 0%, #050c20 55%, #020611 100%);
+    }
+
+    /* ========== 星星背景动画 ========== */
+    body::before, body::after {
+      content: "";
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 2;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.95) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(174,214,255,.75) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.65) 0 1px, transparent 1.5px);
+      background-size: 97px 113px, 173px 149px, 251px 197px;
+      background-position: 10px 20px, 80px 50px, 130px 10px;
+      opacity: .55;
+      animation: starMove 60s linear infinite;
+    }
+    body::after {
+      opacity: .28;
+      animation-duration: 90s;
+      animation-direction: reverse;
+    }
+    @keyframes starMove {
+      from { transform: translate3d(0, 0, 0); }
+      to   { transform: translate3d(-100px, -80px, 0); }
+    }
+
+    /* ========== 页面容器 ========== */
+    #tq-module {
+      position: relative; z-index: 1;
+      width: 100%; height: 100vh; min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .screen {
+      position: relative; z-index: 1;
+      width: min(900px, 100%); max-height: 94vh; overflow-y: auto;
+      padding: 30px;
+      border: 1px solid rgba(190, 215, 255, .28);
+      border-radius: 22px;
+      background: rgba(5, 15, 40, .78);
+      box-shadow: 0 18px 70px rgba(0,0,0,.45), inset 0 0 35px rgba(113,161,255,.08);
+      backdrop-filter: blur(10px);
+    }
+    .hidden { display: none !important; }
+    button { font-family: inherit; }
+  </style>
+</head>
+<body>
+  <div id="tq-module">
+    <!-- 以下三个 section 分别在模块二、三、四中展开 -->
+     <!-- ========================= 封面 ========================= -->
+    <section id="tq-intro" class="screen">
+      <h1 class="cover-title">天球坐标知识测试</h1>
+      <p class="cover-subtitle"> 地平坐标系 · 赤道坐标系 · 黄道坐标系 · 银道坐标系 · 坐标转换</p>
+
+      <!-- 模式切换 -->
+      <div class="mode-switcher">
+        <button class="mode-button" data-mode="low">低年组专项</button>
+        <button class="mode-button" data-mode="high">高年组专项</button>
+        <button class="mode-button active" data-mode="mixed">混合模拟</button>
+      </div>
+
+      <div class="cover-note">
+        📌 注：题库共包含30道真题与改编题，每次随机抽取5道进行测试。
+      </div>
+
+      <!-- 开始测试 + 错题重练（垂直排列） -->
+      <div class="cover-actions">
+        <button id="tq-start" class="start-button">开始测试</button>
+        <button id="tq-wrong-retry" class="wrong-retry-button">📂 错题重练</button>
+      </div>
+    </section>
+
+    <style>
+      .cover-title {
+        margin: 0; text-align: center;
+        font-size: clamp(26px, 4vw, 42px);
+        letter-spacing: 3px;
+        text-shadow: 0 2px 18px rgba(107, 174, 255, .7);
+      }
+      .cover-subtitle {
+        margin: 12px 0 26px; text-align: center;
+        color: #cbdcff; font-size: 15px;
+      }
+      .cover-note {
+        width: fit-content; max-width: 100%;
+        margin: 0 auto 16px; padding: 10px 16px;
+        border-radius: 10px;
+        color: #ccddff; background: rgba(0,0,0,.5);
+        font-size: 16px; line-height: 1.5; text-align: center;
+      }
+      .mode-switcher {
+        display: flex; justify-content: center; gap: 8px;
+        margin: 0 auto 14px; flex-wrap: wrap;
+      }
+      .mode-button {
+        padding: 8px 12px;
+        border: 1px solid rgba(187, 213, 255, .35);
+        border-radius: 999px;
+        color: #cadcff; background: rgba(9, 26, 62, .68);
+        cursor: pointer; font-size: 13px;
+      }
+      .mode-button.active {
+        color: #fff; background: rgba(65, 109, 222, .85);
+        border-color: #9ec2ff;
+      }
+	  .cover-actions {
+        display: flex; flex-direction: column;
+        align-items: center; gap: 20px;
+      }
+      .start-button, .next-button, .restart-button {
+        display: block; margin: 0 auto;
+        padding: 13px 28px; border: 0; border-radius: 999px;
+        color: #fff;
+        background: linear-gradient(135deg, #3579ff, #7d55ff);
+        box-shadow: 0 8px 25px rgba(66, 108, 255, .4);
+        cursor: pointer; font-size: 16px; font-weight: 700;
+        transition: transform .2s, box-shadow .2s;
+      }
+      .start-button:hover, .next-button:hover, .restart-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 30px rgba(66, 108, 255, .6);
+      }
+      .wrong-retry-button {
+        padding: 13px 22px;
+        border: 1px solid rgba(173, 204, 255, .45);
+        border-radius: 999px;
+        color: #dce9ff; background: rgba(22, 50, 105, .78);
+        cursor: pointer; font-size: 15px; font-weight: 700;
+      }
+      .wrong-retry-button:hover { background: rgba(49, 93, 172, .9); }
+      .wrong-retry-button:disabled { opacity: .42; cursor: not-allowed; }
+    </style>
