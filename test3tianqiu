@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>天球坐标知识测试</title>
+
+  <style>
+    /* =====================================================
+       全屏样式
+       修改点：保持 html、body 高度和溢出设置不变，
+       页面铺满整个视口，内容过多时仅允许内部区域滚动
+       ===================================================== */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --text-main: #e4edff;
+      --text-sub: #b8c7e6;
+      --panel-bg: rgba(5, 15, 40, .78);
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      color: #e4edff;
+      background: #020617;
+    }
+
+    /* 修改点：恢复旧版星空背景，置于页面最底层 */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.95) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(174,214,255,.75) 0 1px, transparent 1.5px),
+        radial-gradient(circle, rgba(255,255,255,.65) 0 1px, transparent 1.5px);
+      background-size: 97px 113px, 173px 149px, 251px 197px;
+      background-position: 10px 20px, 80px 50px, 130px 10px;
+      opacity: .55;
+      animation: starMove 60s linear infinite;
+    }
+
+    body::after {
+      opacity: .22;
+      transform: scale(1.3);
+      animation-duration: 100s;
+      animation-direction: reverse;
+    }
+
+    /* 修改点：恢复旧版星星缓慢移动动画 */
+    @keyframes starMove {
+      from {
+        transform: translate3d(0, 0, 0);
+      }
+
+      to {
+        transform: translate3d(-70px, 40px, 0);
+      }
+    }
+
+    #tq-module {
+      position: relative;
+      z-index: 1;
+      width: 100vw;
+      height: 100vh;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .screen {
+      position: relative;
+      z-index: 1;
+      width: min(900px, 100%);
+      max-height: 100vh;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 30px;
+      border: 1px solid rgba(190, 215, 255, .28);
+      border-radius: 0;
+      background: var(--panel-bg);
+      box-shadow:
+        0 18px 70px rgba(0, 0, 0, .45),
+        inset 0 0 35px rgba(113, 161, 255, .08);
+      backdrop-filter: blur(10px);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    /* =====================================================
+       封面样式
+       修改点：移除新版 celestial 天球，仅恢复旧版轨道天球
+       ===================================================== */
+
+    .intro {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .intro-title {
+      margin: 0;
+      font-size: clamp(27px, 5vw, 45px);
+      letter-spacing: 2px;
+      text-shadow: 0 0 22px rgba(122, 192, 255, .7);
+    }
+
+    .intro-subtitle {
+      margin: 13px 0 32px;
+      color: var(--text-sub);
+      font-size: 15px;
+    }
+
+    /* 修改点：恢复旧版轨道天球结构样式 */
+    .intro-orbit {
+      width: 170px;
+      height: 170px;
+      margin: 0 auto 25px;
+      border: 1px solid rgba(132, 190, 255, .45);
+      border-radius: 50%;
+      position: relative;
+      box-shadow:
+        0 0 40px rgba(85, 160, 255, .25),
+        inset 0 0 35px rgba(85, 160, 255, .14);
+      animation: orbitRotate 12s linear infinite;
+    }
+
+    .intro-orbit::before,
+    .intro-orbit::after {
+      content: "";
+      position: absolute;
+      inset: 20px;
+      border: 1px solid rgba(177, 125, 255, .42);
+      border-radius: 50%;
+      transform: rotate(62deg);
+    }
+
+    .intro-orbit::after {
+      inset: 45px -15px;
+      transform: rotate(-26deg);
+    }
+
+    /* 修改点：恢复旧版中心发光星球 */
+    .planet {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      left: 68px;
+      top: 68px;
+      border-radius: 50%;
+      background:
+        radial-gradient(
+          circle at 30% 25%,
+          #d7f3ff,
+          #4c9bff 52%,
+          #2440b2
+        );
+      box-shadow: 0 0 25px rgba(78, 164, 255, .95);
+    }
+
+    /* 修改点：恢复旧版轨道天球旋转动画 */
+    @keyframes orbitRotate {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .cover-note {
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 auto 16px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      color: #ccddff;
+      background: rgba(0, 0, 0, .5);
+      font-size: 15px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .mode-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 0 auto 14px;
+      flex-wrap: wrap;
+    }
+
+    .mode-button {
+      padding: 8px 12px;
+      border: 1px solid rgba(187, 213, 255, .35);
+      border-radius: 999px;
+      color: #cadcff;
+      background: rgba(9, 26, 62, .68);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .mode-button.active {
+      color: #fff;
+      background: rgba(65, 109, 222, .85);
+      border-color: #9ec2ff;
+    }
+
+    .cover-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .start-button {
+      border: 1px solid rgba(190, 229, 255, .72);
+      border-radius: 999px;
+      padding: 16px 48px;
+      color: #fff;
+      background: linear-gradient(135deg, #4a8cff, #7d5cff);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 19px;
+      box-shadow:
+        0 10px 30px rgba(39, 105, 255, .35),
+        0 0 20px rgba(130, 115, 255, .25);
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .start-button:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow:
+        0 15px 38px rgba(39, 105, 255, .5),
+        0 0 25px rgba(130, 115, 255, .4);
+    }
+
+    .wrong-retry-button {
+      padding: 13px 22px;
+      border: 1px solid rgba(173, 204, 255, .45);
+      border-radius: 999px;
+      color: #dce9ff;
+      background: rgba(22, 50, 105, .78);
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .wrong-retry-button:hover {
+      background: rgba(49, 93, 172, .9);
+    }
+
+    .wrong-retry-button:disabled {
+      opacity: .42;
+      cursor: not-allowed;
+    }
+
+    /* =====================================================
+       答题页面顶部
+       ===================================================== */
+
+    .test-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 15px;
+    }
+
+    .test-title {
+      margin: 0;
+      color: #e4edff;
+      font-size: 22px;
+    }
+
+    .practice-label {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      color: #cfe0ff;
+      background: rgba(52, 92, 170, .65);
+      font-size: 12px;
+      font-weight: normal;
+    }
+
+    /* =====================================================
+       倒计时
+       修改点：保留最后5秒红色脉冲和缩放效果
+       ===================================================== */
+
+    #tq-timer {
+      min-width: 78px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: #e74c3c;
+      background: rgba(38, 25, 40, .8);
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+      transition: color .2s, opacity .2s, transform .2s;
+    }
+
+    #tq-timer.warning {
+      color: #ff4444;
+    }
+
+    #tq-timer.warning.pulse {
+      animation: timerPulse .5s ease-in-out;
+    }
+
+    @keyframes timerPulse {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: .55;
+        transform: scale(1.2);
+      }
+
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* =====================================================
+       进度条填充条
+       修改点：彩色填充条放在标题下方、来源标注上方
+       ===================================================== */
+
+    .progress-wrap {
+      margin: 0 0 22px;
+    }
+
+    .progress-line {
+      height: 6px;
+      margin-bottom: 0;
+      overflow: hidden;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, .12);
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #65c8ff, #9c7cff);
+      box-shadow: 0 0 12px rgba(89, 160, 255, .85);
+      transition: width .3s ease;
+    }
+
+    .question-source {
+      display: block;
+      margin-bottom: 8px;
+      color: #8899aa;
+      font-size: .7em;
+    }
+
+    #tq-question {
+      margin-bottom: 20px;
+      color: #fff;
+      font-size: 20px;
+      line-height: 1.7;
+    }
+
+    #tq-options {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option-button {
+      width: 100%;
+      padding: 15px 17px;
+      border: 1px solid rgba(187, 213, 255, .32);
+      border-radius: 12px;
+      color: #edf4ff;
+      background: rgba(18, 38, 83, .72);
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1.5;
+      text-align: left;
+      transition: background .2s, border-color .2s, transform .2s;
+    }
+
+    .option-button:hover:not(:disabled) {
+      border-color: #77aaff;
+      background: rgba(47, 91, 175, .8);
+      transform: translateX(4px);
+    }
+
+    .option-button:disabled {
+      cursor: default;
+    }
+
+    .option-button.correct {
+      border-color: #45d483;
+      background: rgba(28, 127, 73, .75);
+    }
+
+    .option-button.wrong {
+      border-color: #ff6262;
+      background: rgba(150, 39, 45, .75);
+    }
+
+    #tq-feedback {
+      min-height: 60px;
+      margin-top: 20px;
+      padding: 13px 15px;
+      border-radius: 10px;
+      color: #dfeaff;
+      background: rgba(0, 0, 0, .28);
+      line-height: 1.7;
+    }
+
+    .action-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 22px;
+    }
+
+    .next-button,
+    .restart-button {
+      display: block;
+      margin: 0 auto;
+      padding: 13px 28px;
+      border: 0;
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(135deg, #3579ff, #7d55ff);
+      box-shadow: 0 8px 25px rgba(66, 108, 255, .4);
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .next-button:hover,
+    .restart-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(66, 108, 255, .6);
+    }
+
+    .next-button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* =====================================================
+       答题进度文字
+       修改点：进度文字移动到下一题按钮下方、页面底部
+       ===================================================== */
+
+    .progress-text-bottom {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(173, 204, 255, .14);
+      color: #aebdd9;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* =====================================================
+       结果页和复盘样式
+       ===================================================== */
+
+    #tq-review {
+      margin-top: 22px;
+    }
+
+    .review-card {
+      margin-top: 14px;
+      padding: 16px;
+      border: 1px solid rgba(175, 202, 255, .25);
+      border-radius: 12px;
+      background: rgba(13, 30, 68, .72);
+    }
+
+    .review-card-title {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .review-answer {
+      margin-top: 8px;
+      color: #cad8ee;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* =====================================================
+       跳转链接生成
+       ===================================================== */
+
+    .knowledge-link {
+      display: inline-block;
+      margin-top: 10px;
+      color: #9cc4ff;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .knowledge-link:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .similar-button {
+      margin-top: 10px;
+      margin-left: 10px;
+      padding: 8px 12px;
+      border: 1px solid rgba(173, 204, 255, .45);
+      border-radius: 999px;
+      color: #dce9ff;
+      background: rgba(22, 50, 105, .78);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .similar-button:hover {
+      background: rgba(49, 93, 172, .9);
+    }
+
+    .result-score {
+      margin: 15px 0;
+      color: #dce9ff;
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .result-summary {
+      color: #b6c7e4;
+      line-height: 1.8;
+      text-align: center;
+    }
+
+    /* =====================================================
+       移动端适配
+       ===================================================== */
+
+    @media (max-width: 700px) {
+      #tq-module {
+        padding: 0;
+      }
+
+      .screen {
+        width: 100vw;
+        max-height: 100vh;
+        padding: 20px 15px;
+      }
+
+      .intro-orbit {
+        width: 140px;
+        height: 140px;
+      }
+
+      .planet {
+        width: 28px;
+        height: 28px;
+        left: 56px;
+        top: 56px;
+      }
+
+      #tq-question {
+        font-size: 18px;
+      }
+
+      .option-button {
+        padding: 13px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="tq-module">
+
+    <!-- =====================================================
+         封面
+         修改点：删除所有 celestial 相关元素，
+         仅保留旧版轨道天球
+         ===================================================== -->
+
+    <section id="tq-intro" class="screen intro">
+      <div class="intro-orbit" aria-hidden="true">
+        <div class="planet"></div>
+      </div>
+
+      <h1 class="intro-title">天球坐标知识测试</h1>
+      <p class="intro-subtitle">从地理坐标到天球坐标</p>
+
+      <div class="mode-switcher">
+        <button class="mode-button" data-mode="low">
+          低年组专项
+        </button>
+
+        <button class="mode-button" data-mode="high">
+          高年组专项
+        </button>
+
+        <button class="mode-button active" data-mode="mixed">
+          混合模拟
+        </button>
+      </div>
+
+      <div class="cover-note">
+        📌 注：题库共包含30道真题与改编题，每次随机抽取5道进行测试。
+      </div>
+
+      <!-- 修改点：错题重练按钮继续位于开始测试按钮正下方 -->
+      <div class="cover-actions">
+        <button id="tq-start" class="start-button">
+          开始测试
+        </button>
+
+        <button id="tq-wrong-retry" class="wrong-retry-button">
+          📂 错题重练
+        </button>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         答题页面
+         ===================================================== -->
+
+    <section id="tq-test" class="screen hidden">
+      <div class="test-top">
+        <h2 class="test-title">
+          天文知识测试
+          <span id="tq-practice-label" class="practice-label hidden">
+            补充练习
+          </span>
+        </h2>
+
+        <div id="tq-timer">00:30</div>
+      </div>
+
+      <!-- 修改点：只保留彩色进度条，放到标题下方 -->
+      <div class="progress-wrap">
+        <div class="progress-line">
+          <div id="tq-progress-fill" class="progress-bar"></div>
+        </div>
+      </div>
+
+      <div id="tq-question"></div>
+
+      <div id="tq-options"></div>
+
+      <div id="tq-feedback">
+        请选择一个答案。
+      </div>
+
+      <div class="action-row">
+        <button id="tq-next" class="next-button" disabled>
+          下一题
+        </button>
+      </div>
+
+      <!-- 修改点：答题进度文字移动到下一题按钮下方 -->
+      <div class="progress-text-bottom">
+        第 <span id="tq-progress-text">1</span> /
+        <span id="tq-total-text">5</span> 题
+        &nbsp;·&nbsp;
+        得分：<span id="tq-score-text">0</span>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         结果页面
+         ===================================================== -->
+
+    <section id="tq-result" class="screen hidden">
+      <h2 class="test-title" style="text-align:center;">
+        测试完成
+      </h2>
+
+      <div id="tq-final-score" class="result-score"></div>
+      <div id="tq-result-summary" class="result-summary"></div>
+
+      <div id="tq-review"></div>
+
+      <button id="tq-retry-all" class="restart-button">
+        重新开始测试
+      </button>
+    </section>
+  </div>
+
+  <script>
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const TIME_LIMIT = 30;
+      const WRONG_STORAGE_KEY = "wrongQuestions";
+
+      /* =====================================================
+         总题库区域
+         ===================================================== */
+
+      const questionsBank = [
+        {
+          id: "q1",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "地平坐标系的坐标定义",
+          source: "CNAO 2022 决赛相关知识点改编",
+          question: "地平坐标系中，描述天体位置所使用的两个基本坐标通常是：",
+          options: ["方位角和高度角", "赤经和赤纬", "黄经和黄纬", "银经和银纬"],
+          answer: "方位角和高度角",
+          explanation: "地平坐标系以观测者所在地的地平圈和天顶为参考，使用方位角描述水平方向，使用高度角描述天体相对于地平线的高度。赤经赤纬属于赤道坐标系，黄经黄纬属于黄道坐标系，银经银纬属于银道坐标系。"
+        },
+        {
+          id: "q2",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "地平坐标系的坐标定义",
+          source: "根据CNAO地平坐标相关题改编",
+          question: "在地平坐标系中，高度角为90°的方向是：",
+          options: ["天顶", "天底", "天北极", "春分点"],
+          answer: "天顶",
+          explanation: "高度角从地平线向上测量，地平线高度角为0°，天顶高度角为90°。"
+        },
+        {
+          id: "q3",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "地平坐标系的特点",
+          source: "CNAO 2023 预赛相关知识点改编",
+          question: "地平坐标系最大的特点是：",
+          options: ["与观测者的地点和时间有关", "与观测地点完全无关", "只适合描述银河系结构", "坐标永远不会随时间变化"],
+          answer: "与观测者的地点和时间有关",
+          explanation: "地平坐标系以观测者当地地平面为参考，因此观测地点改变或时间改变时，天体的方位角和高度角都可能发生变化。"
+        },
+        {
+          id: "q4",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "地平坐标系的特点",
+          source: "根据CNAO地平坐标相关题改编",
+          question: "同一天体在两个不同城市同时观测时，最可能不同的是：",
+          options: ["地平坐标", "天体真实质量", "天体光谱类型", "天体物理性质"],
+          answer: "地平坐标",
+          explanation: "不同城市的地理位置不同，当地地平面和天顶方向也不同，所以同一天体的地平坐标可能不同，但天体自身的物理性质不会因此改变。"
+        },
+        {
+          id: "q5",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "时角坐标系",
+          source: "CNAO 2022 决赛相关知识点改编",
+          question: "时角坐标系中，时角通常是从哪个方向开始测量的？",
+          options: ["当地子午圈", "黄道面", "银河平面", "天底方向"],
+          answer: "当地子午圈",
+          explanation: "时角表示天体相对于当地子午圈的角距离，是当地天球定位的重要坐标量。"
+        },
+        {
+          id: "q6",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "时角坐标系",
+          source: "根据CNAO时角坐标相关题改编",
+          question: "当某天体的时角为0时，通常表示该天体：",
+          options: ["位于当地子午圈上", "位于天底", "位于银道面上", "位于黄道北极"],
+          answer: "位于当地子午圈上",
+          explanation: "时角为0说明天体与当地子午圈重合，天体此时位于当地子午圈上。"
+        },
+        {
+          id: "q7",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "地方恒星时",
+          source: "CNAO 2023 预赛相关知识点改编",
+          question: "地方恒星时在观测中的主要用途是：",
+          options: ["判断某一赤经天体是否接近中天", "计算天体表面温度", "确定月球质量", "测量太阳直径"],
+          answer: "判断某一赤经天体是否接近中天",
+          explanation: "地方恒星时与天体赤经结合，可以计算天体时角，从而判断天体是否接近当地子午圈。"
+        },
+        {
+          id: "q8",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "地方恒星时",
+          source: "根据CNAO地方恒星时相关题改编",
+          question: "如果某天体的赤经等于当地恒星时，那么该天体的时角约为：",
+          options: ["0小时", "6小时", "12小时", "24小时"],
+          answer: "0小时",
+          explanation: "根据H=LST−α，当地方恒星时和赤经相等时，时角H为0，天体位于当地子午圈上。"
+        },
+        {
+          id: "q9",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "赤道坐标系与地理坐标类比",
+          source: "CNAO 2024 预赛相关知识点改编",
+          question: "赤道坐标系中，赤纬最类似于地理坐标中的：",
+          options: ["纬度", "经度", "海拔", "时区"],
+          answer: "纬度",
+          explanation: "赤纬表示天体相对于天赤道的南北角距离，因此在坐标含义上类似于地理纬度。"
+        },
+        {
+          id: "q10",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "赤道坐标系与地理坐标类比",
+          source: "根据CNAO赤道坐标相关题改编",
+          question: "赤经在赤道坐标系中的作用最接近地理坐标中的：",
+          options: ["经度", "纬度", "海拔", "气压"],
+          answer: "经度",
+          explanation: "赤经表示天体沿天赤道方向的位置，在坐标作用上与地理经度相似。"
+        },
+        {
+          id: "q11",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "赤经的单位",
+          source: "CNAO 2022 决赛相关知识点改编",
+          question: "赤经通常采用时、分、秒表示，主要原因是：",
+          options: ["地球自转使天球周日运动与时间角度联系紧密", "赤经不能用角度表示", "赤经只适用于太阳", "赤经与天赤道没有关系"],
+          answer: "地球自转使天球周日运动与时间角度联系紧密",
+          explanation: "天球周日运动与地球自转密切相关，天球转过一周对应24小时，也对应360°，所以赤经常用时分秒表示。"
+        },
+        {
+          id: "q12",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "赤经的单位",
+          source: "根据CNAO赤经单位相关题改编",
+          question: "赤经24小时对应的角度范围是：",
+          options: ["360°", "180°", "90°", "24°"],
+          answer: "360°",
+          explanation: "赤经完整周期为24小时，对应天球赤道完整的360°，因此1小时赤经对应15°。"
+        },
+        {
+          id: "q13",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "黄道坐标系",
+          source: "CNAO 2023 决赛相关知识点改编",
+          question: "黄道坐标系中的黄纬，是以哪个平面为参考平面测量的？",
+          options: ["黄道面", "地平面", "银河平面", "当地子午面"],
+          answer: "黄道面",
+          explanation: "黄道坐标系以黄道面为参考，黄纬表示天体偏离黄道面的角距离。"
+        },
+        {
+          id: "q14",
+          difficulty: "low",
+          type: "adapted",
+          knowledgePoint: "黄道坐标系",
+          source: "根据CNAO黄道坐标相关题改编",
+          question: "黄道坐标系中的黄经主要沿哪个方向测量？",
+          options: ["沿黄道面", "垂直地平面", "沿银河极方向", "从天底向天顶测量"],
+          answer: "沿黄道面",
+          explanation: "黄经是天体在黄道面上的经度坐标，通常以春分点为起点沿黄道方向测量。"
+        },
+        {
+          id: "q15",
+          difficulty: "low",
+          type: "original",
+          knowledgePoint: "二十四节气与黄经",
+          source: "CNAO 2024 决赛相关知识点改编",
+          question: "二十四节气与黄道坐标系中的哪一个量关系最密切？",
+          options: ["太阳黄经", "天体方位角", "银河纬度", "天体高度角"],
+          answer: "太阳黄经",
+          explanation: "二十四节气是根据太阳在黄道上的视位置划分的，本质上对应太阳黄经的特定数值。"
+        },
+        {
+          id: "q16",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "岁差与历元",
+          source: "CNAO 2024 决赛相关知识点改编",
+          question: "岁差会导致恒星的赤道坐标发生长期变化，因此星表中的坐标通常需要注明：",
+          options: ["历元", "天气状况", "望远镜品牌", "月相名称"],
+          answer: "历元",
+          explanation: "由于岁差等长期效应，天球参考方向会随时间改变，因此星表坐标需要注明所采用的参考历元。"
+        },
+        {
+          id: "q17",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "岁差与历元",
+          source: "根据CNAO岁差相关题改编",
+          question: "星表中标注J2000.0，主要表示：",
+          options: ["坐标所采用的参考历元", "恒星形成时间", "观测地点经度", "望远镜建造年份"],
+          answer: "坐标所采用的参考历元",
+          explanation: "J2000.0表示一组天文坐标所使用的参考时间基准，并不表示恒星形成时间或望远镜建造年份。"
+        },
+        {
+          id: "q18",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "现代标准ICRS",
+          source: "IAO理论题相关知识点改编",
+          question: "现代天文学中用于建立高精度天球参考框架的标准之一是：",
+          options: ["ICRS", "GPS天气标准", "UTC月相表", "地方时区表"],
+          answer: "ICRS",
+          explanation: "ICRS是国际天球参考系，用于建立稳定、统一和高精度的天球坐标参考框架。"
+        },
+        {
+          id: "q19",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "现代标准ICRS",
+          source: "根据IAO天球参考系相关题改编",
+          question: "采用国际天球参考系的主要目的之一是：",
+          options: ["建立稳定统一的天球坐标参考框架", "预测每日天气", "测量海洋潮汐", "确定月球表面颜色"],
+          answer: "建立稳定统一的天球坐标参考框架",
+          explanation: "统一的天球参考框架能够为天体测量、星表编制和不同观测数据之间的比较提供基础。"
+        },
+        {
+          id: "q20",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "银道坐标系的应用",
+          source: "CNAO 2023 决赛相关知识点改编",
+          question: "银道坐标系最适合用于描述和研究：",
+          options: ["银河系内天体的分布", "观测者当天的天气", "地球表面城市分布", "太阳表面黑子的经纬度"],
+          answer: "银河系内天体的分布",
+          explanation: "银道坐标系以银河系盘面为参考，适合研究银河系结构和银河面附近天体的分布。"
+        },
+        {
+          id: "q21",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "银道坐标系的应用",
+          source: "根据CNAO银道坐标相关题改编",
+          question: "研究银河系旋臂结构时，最适合优先使用：",
+          options: ["银道坐标系", "地平坐标系", "地方时角坐标系", "地理坐标系"],
+          answer: "银道坐标系",
+          explanation: "银河系旋臂属于银河系自身结构，使用以银河面为参考的银道坐标系最为合适。"
+        },
+        {
+          id: "q22",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "银道坐标系的坐标定义",
+          source: "IAO理论题相关知识点改编",
+          question: "银道坐标系中的银纬b=0°表示天体位于：",
+          options: ["银道面上", "天赤道上", "地平圈上", "黄道面上"],
+          answer: "银道面上",
+          explanation: "银纬是天体相对于银道面的角距离，银纬为0°表示天体位于银道面上。"
+        },
+        {
+          id: "q23",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "银道坐标系的坐标定义",
+          source: "根据IAO银道坐标相关题改编",
+          question: "银道坐标系中的北银极银纬通常为：",
+          options: ["+90°", "0°", "-90°", "+45°"],
+          answer: "+90°",
+          explanation: "北银极垂直于银道面并位于其北侧，所以银纬为+90°。"
+        },
+        {
+          id: "q24",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "恒星时公式",
+          source: "CNAO 2022 决赛相关知识点改编",
+          question: "天体的时角H、地方恒星时LST和赤经α之间的常用关系是：",
+          options: ["H = LST - α", "H = LST + α", "H = α - LST，且永远为正", "H = LST × α"],
+          answer: "H = LST - α",
+          explanation: "在常用天文约定下，时角等于地方恒星时减去赤经，即H=LST−α。"
+        },
+        {
+          id: "q25",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "恒星时公式",
+          source: "根据CNAO恒星时相关题改编",
+          question: "若地方恒星时为10时，某天体赤经为7时，则其时角为：",
+          options: ["3时", "17时", "70时", "0.7时"],
+          answer: "3时",
+          explanation: "根据H=LST−α，代入10时和7时，可得时角为3时。"
+        },
+        {
+          id: "q26",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "地平坐标与赤道坐标转换",
+          source: "IAO理论题相关知识点改编",
+          question: "在进行地平坐标和赤道坐标之间的转换时，必须考虑的观测条件之一是：",
+          options: ["观测者所在纬度", "望远镜颜色", "星表字体大小", "月球表面亮度等级"],
+          answer: "观测者所在纬度",
+          explanation: "两类坐标所依据的参考面不同，进行转换时必须考虑观测者纬度以及天体时角等观测条件。"
+        },
+        {
+          id: "q27",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "地平坐标与赤道坐标转换",
+          source: "根据IAO坐标转换相关题改编",
+          question: "地平坐标与赤道坐标转换中，除了观测者纬度外通常还需要：",
+          options: ["天体时角", "望远镜外壳颜色", "月球相位名称", "星图纸张大小"],
+          answer: "天体时角",
+          explanation: "地平坐标和赤道坐标之间的转换通常需要使用观测者纬度、天体时角和赤纬等参数。"
+        },
+        {
+          id: "q28",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "赤道坐标与黄道坐标转换",
+          source: "CNAO 2024预赛相关知识点改编",
+          question: "进行赤道坐标与黄道坐标转换时，主要需要考虑黄赤交角，原因是：",
+          options: ["黄道面与天赤道面并不重合", "银河系没有中心", "地平圈永远不动", "赤经不能用角度表示"],
+          answer: "黄道面与天赤道面并不重合",
+          explanation: "黄道面和天赤道面之间存在黄赤交角，因此赤道坐标与黄道坐标转换时需要考虑两个参考平面的倾斜关系。"
+        },
+        {
+          id: "q29",
+          difficulty: "high",
+          type: "adapted",
+          knowledgePoint: "赤道坐标与黄道坐标转换",
+          source: "根据CNAO黄赤交角相关题改编",
+          question: "黄赤交角反映的是：",
+          options: ["黄道面与天赤道面的夹角", "地平面与银河面的夹角", "地轴与地平面的夹角", "月球轨道面与银道面的夹角"],
+          answer: "黄道面与天赤道面的夹角",
+          explanation: "黄赤交角就是黄道面和天赤道面之间的夹角。"
+        },
+        {
+          id: "q30",
+          difficulty: "high",
+          type: "original",
+          knowledgePoint: "大气折射修正",
+          source: "BAAO Astro Challenge相关知识点改编",
+          question: "大气折射对接近地平线的天体高度角测量通常会造成什么影响？",
+          options: ["使天体看起来比实际位置更高", "使天体看起来比实际位置更低", "完全不改变天体位置", "只改变天体的赤经，不改变高度角"],
+          answer: "使天体看起来比实际位置更高",
+          explanation: "光线经过地球大气层时会发生折射，使接近地平线的天体看起来比其真实几何位置更高。"
+        }
+      ];
+
+      const introEl = document.getElementById("tq-intro");
+      const testEl = document.getElementById("tq-test");
+      const resultEl = document.getElementById("tq-result");
+
+      const startButton = document.getElementById("tq-start");
+      const wrongRetryButton = document.getElementById("tq-wrong-retry");
+      const retryButton = document.getElementById("tq-retry-all");
+      const nextButton = document.getElementById("tq-next");
+
+      const timerEl = document.getElementById("tq-timer");
+      const questionEl = document.getElementById("tq-question");
+      const optionsEl = document.getElementById("tq-options");
+      const feedbackEl = document.getElementById("tq-feedback");
+
+      const progressTextEl = document.getElementById("tq-progress-text");
+      const totalTextEl = document.getElementById("tq-total-text");
+      const scoreTextEl = document.getElementById("tq-score-text");
+      const progressFillEl = document.getElementById("tq-progress-fill");
+
+      const finalScoreEl = document.getElementById("tq-final-score");
+      const resultSummaryEl = document.getElementById("tq-result-summary");
+      const reviewEl = document.getElementById("tq-review");
+      const practiceLabelEl = document.getElementById("tq-practice-label");
+
+      const modeButtons = document.querySelectorAll(".mode-button");
+
+      let currentMode = "mixed";
+      let sessionMode = "normal";
+      let selectedQuestions = [];
+      let currentIndex = 0;
+      let score = 0;
+      let records = [];
+      let timer = null;
+      let timeLeft = TIME_LIMIT;
+      let answered = false;
+
+      /* =====================================================
+         通用工具函数
+         ===================================================== */
+
+      function shuffle(array) {
+        const result = array.slice();
+
+        for (let i = result.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+
+          [result[i], result[j]] =
+            [result[j], result[i]];
+        }
+
+        return result;
+      }
+
+      function takeRandom(array, count) {
+        return shuffle(array).slice(0, count);
+      }
+
+      function getOptionLetter(index) {
+        return String.fromCharCode(65 + index);
+      }
+
+      function getCorrectIndex(question) {
+        return question.options.indexOf(question.answer);
+      }
+
+      function formatTime(seconds) {
+        return "00:" + String(seconds).padStart(2, "0");
+      }
+
+      function clearTimer() {
+        if (timer !== null) {
+          clearInterval(timer);
+          timer = null;
+        }
+      }
+
+      /* =====================================================
+         错题本地存储
+         修改点：错题数量是多少就练习多少道，不再补足到5道
+         ===================================================== */
+
+      function getWrongIds() {
+        try {
+          const value = JSON.parse(
+            localStorage.getItem(WRONG_STORAGE_KEY) || "[]"
+          );
+
+          return Array.isArray(value) ? value : [];
+        } catch (error) {
+          return [];
+        }
+      }
+
+      function saveWrongIds(ids) {
+        localStorage.setItem(
+          WRONG_STORAGE_KEY,
+          JSON.stringify(Array.from(new Set(ids)))
+        );
+
+        updateWrongButton();
+      }
+
+      function addWrongId(id) {
+        const ids = getWrongIds();
+
+        if (!ids.includes(id)) {
+          ids.push(id);
+          saveWrongIds(ids);
+        }
+      }
+
+      function removeWrongId(id) {
+        saveWrongIds(
+          getWrongIds().filter(function (item) {
+            return item !== id;
+          })
+        );
+      }
+
+      function updateWrongButton() {
+        const count = getWrongIds().length;
+
+        wrongRetryButton.disabled = count === 0;
+        wrongRetryButton.title =
+          count === 0
+            ? "暂无错题"
+            : "当前错题数量：" + count;
+
+        wrongRetryButton.textContent =
+          count === 0
+            ? "📂 错题重练（暂无错题）"
+            : "📂 错题重练（" + count + "道）";
+      }
+
+      /* =====================================================
+         随机抽题函数
+         ===================================================== */
+
+      function getSpecialQuestions(difficulty) {
+        const pool = questionsBank.filter(function (question) {
+          return question.difficulty === difficulty;
+        });
+
+        if (pool.length < 5) {
+          throw new Error("当前专项题库不足5道，请扩充题库后重试。");
+        }
+
+        return takeRandom(pool, 5);
+      }
+
+      function getMixedQuestions() {
+        const lowOriginal = questionsBank.filter(function (question) {
+          return question.difficulty === "low" &&
+            question.type === "original";
+        });
+
+        const highOriginal = questionsBank.filter(function (question) {
+          return question.difficulty === "high" &&
+            question.type === "original";
+        });
+
+        const lowAdapted = questionsBank.filter(function (question) {
+          return question.difficulty === "low" &&
+            question.type === "adapted";
+        });
+
+        const highAdapted = questionsBank.filter(function (question) {
+          return question.difficulty === "high" &&
+            question.type === "adapted";
+        });
+
+        const result = shuffle(
+          takeRandom(lowOriginal, 1)
+            .concat(takeRandom(highOriginal, 2))
+            .concat(takeRandom(lowAdapted, 1))
+            .concat(takeRandom(highAdapted, 1))
+        );
+
+        return result;
+      }
+
+      /* =====================================================
+         进度条更新函数
+         ===================================================== */
+
+      function updateProgress() {
+        const total = selectedQuestions.length;
+        const current = currentIndex + 1;
+
+        progressTextEl.textContent = String(current);
+        totalTextEl.textContent = String(total);
+        scoreTextEl.textContent = String(score);
+
+        progressFillEl.style.width =
+          Math.min(100, current / total * 100) + "%";
+      }
+
+      /* =====================================================
+         倒计时函数
+         ===================================================== */
+
+      function startTimer() {
+        clearTimer();
+
+        timeLeft = TIME_LIMIT;
+        timerEl.textContent = formatTime(timeLeft);
+        timerEl.classList.remove("warning", "pulse");
+
+        timer = setInterval(function () {
+          timeLeft--;
+          timerEl.textContent = formatTime(timeLeft);
+
+          if (timeLeft <= 5) {
+            timerEl.classList.add("warning");
+
+            timerEl.classList.remove("pulse");
+            void timerEl.offsetWidth;
+            timerEl.classList.add("pulse");
+          }
+
+          if (timeLeft <= 0) {
+            submitAnswer(null, true);
+          }
+        }, 1000);
+      }
+
+      /* =====================================================
+         会话控制
+         ===================================================== */
+
+      function startSession(questions, mode) {
+        selectedQuestions = questions.map(function (question) {
+          return {
+            ...question,
+            options: shuffle(question.options)
+          };
+        });
+
+        sessionMode = mode;
+        currentIndex = 0;
+        score = 0;
+        records = [];
+
+        introEl.classList.add("hidden");
+        resultEl.classList.add("hidden");
+        testEl.classList.remove("hidden");
+
+        if (sessionMode === "practice") {
+          practiceLabelEl.classList.remove("hidden");
+        } else {
+          practiceLabelEl.classList.add("hidden");
+        }
+
+        renderQuestion();
+      }
+
+      function startNormalTest() {
+        try {
+          let questions;
+
+          if (currentMode === "low") {
+            questions = getSpecialQuestions("low");
+          } else if (currentMode === "high") {
+            questions = getSpecialQuestions("high");
+          } else {
+            questions = getMixedQuestions();
+          }
+
+          startSession(questions, "normal");
+        } catch (error) {
+          alert(error.message);
+        }
+      }
+
+      /* 修改点：错题有多少道就练多少道，不从总题库补题 */
+      function startWrongPractice() {
+        const wrongIds = getWrongIds();
+
+        if (wrongIds.length === 0) {
+          alert("暂无错题");
+          updateWrongButton();
+          return;
+        }
+
+        const wrongQuestions = questionsBank.filter(function (question) {
+          return wrongIds.includes(question.id);
+        });
+
+        if (wrongQuestions.length === 0) {
+          alert("暂无错题");
+          updateWrongButton();
+          return;
+        }
+
+        /* 修改点：直接练习全部错题，不再限制为5道或补足5道 */
+        startSession(shuffle(wrongQuestions), "wrong");
+      }
+
+      /* =====================================================
+         题目显示
+         ===================================================== */
+
+      function renderQuestion() {
+        const question = selectedQuestions[currentIndex];
+
+        answered = false;
+        nextButton.disabled = true;
+
+        question.options = shuffle(question.options);
+
+        questionEl.innerHTML =
+          '<span class="question-source">[来源：' +
+          question.source +
+          "]</span>" +
+          "<div>" +
+          question.question +
+          "</div>";
+
+        optionsEl.innerHTML = "";
+
+        question.options.forEach(function (option, index) {
+          const button = document.createElement("button");
+
+          button.type = "button";
+          button.className = "option-button";
+          button.textContent =
+            getOptionLetter(index) + ". " + option;
+
+          button.addEventListener("click", function () {
+            submitAnswer(index, false);
+          });
+
+          optionsEl.appendChild(button);
+        });
+
+        feedbackEl.textContent = "请选择一个答案。";
+        feedbackEl.style.color = "#dfeaff";
+        feedbackEl.style.background = "rgba(0, 0, 0, .28)";
+
+        updateProgress();
+        startTimer();
+      }
+
+      function disableOptions() {
+        optionsEl.querySelectorAll("button").forEach(function (button) {
+          button.disabled = true;
+        });
+      }
+
+      function showAnswerStyles(selectedIndex, correctIndex) {
+        optionsEl.querySelectorAll("button").forEach(function (button, index) {
+          if (index === correctIndex) {
+            button.classList.add("correct");
+          }
+
+          if (
+            selectedIndex !== null &&
+            index === selectedIndex &&
+            index !== correctIndex
+          ) {
+            button.classList.add("wrong");
+          }
+        });
+      }
+
+      /* =====================================================
+         答题判定
+         ===================================================== */
+
+      function submitAnswer(selectedIndex, isTimeout) {
+        if (answered) {
+          return;
+        }
+
+        answered = true;
+        clearTimer();
+        disableOptions();
+
+        const question = selectedQuestions[currentIndex];
+        const correctIndex = getCorrectIndex(question);
+        const isCorrect = selectedIndex === correctIndex;
+
+        showAnswerStyles(selectedIndex, correctIndex);
+
+        records[currentIndex] = {
+          question: question,
+          selectedIndex: selectedIndex,
+          correctIndex: correctIndex,
+          isCorrect: isCorrect,
+          isTimeout: isTimeout
+        };
+
+        if (isCorrect) {
+          score++;
+
+          if (sessionMode === "wrong") {
+            removeWrongId(question.id);
+          }
+
+          feedbackEl.style.color = "#9dffbf";
+          feedbackEl.style.background = "rgba(24, 112, 62, .35)";
+          feedbackEl.innerHTML =
+            "回答正确。<br>" +
+            "知识点：" +
+            question.knowledgePoint +
+            "<br>解析：" +
+            question.explanation;
+        } else {
+          addWrongId(question.id);
+
+          feedbackEl.style.color = "#ffb3b3";
+          feedbackEl.style.background = "rgba(136, 30, 40, .35)";
+          feedbackEl.innerHTML =
+            (isTimeout ? "时间到。 " : "回答错误。 ") +
+            "正确答案是 " +
+            getOptionLetter(correctIndex) +
+            "。<br>" +
+            "知识点：" +
+            question.knowledgePoint +
+            "<br>解析：" +
+            question.explanation;
+        }
+
+        updateProgress();
+        nextButton.disabled = false;
+      }
+
+      /* =====================================================
+         跳转链接生成
+         ===================================================== */
+
+      function createKnowledgeLink() {
+        const link = document.createElement("a");
+
+        link.href =
+          "https://sdaa.novas.top/celestial-coordinates.mdx";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.className = "knowledge-link";
+        link.textContent = "📖 查看知识点详解";
+
+        return link;
+      }
+
+      /* =====================================================
+         同类改编题
+         ===================================================== */
+
+      function createSimilarButton(question) {
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "similar-button";
+        button.textContent = "🔁 练同类改编题";
+
+        button.addEventListener("click", function () {
+          const candidates = questionsBank.filter(function (candidate) {
+            return candidate.id !== question.id &&
+              candidate.type === "adapted" &&
+              candidate.knowledgePoint === question.knowledgePoint;
+          });
+
+          if (candidates.length === 0) {
+            alert("该知识点暂无同类改编题，建议复习笔记。");
+            return;
+          }
+
+          startSession([takeRandom(candidates, 1)[0]], "practice");
+        });
+
+        return button;
+      }
+
+      /* =====================================================
+         复盘页面
+         ===================================================== */
+
+      function renderReview() {
+        reviewEl.innerHTML = "";
+
+        const focusTitle = document.createElement("h3");
+        focusTitle.textContent = "建议重点复习的知识点";
+        focusTitle.style.color = "#dbe8ff";
+        reviewEl.appendChild(focusTitle);
+
+        const wrongRecords = records.filter(function (record) {
+          return record && !record.isCorrect;
+        });
+
+        const focusText = document.createElement("p");
+        focusText.style.color = "#b6c7e4";
+        focusText.style.lineHeight = "1.8";
+
+        if (wrongRecords.length === 0) {
+          focusText.textContent = "本次没有错题，继续保持！";
+        } else {
+          focusText.textContent = Array.from(
+            new Set(
+              wrongRecords.map(function (record) {
+                return record.question.knowledgePoint;
+              })
+            )
+          ).join("、");
+        }
+
+        reviewEl.appendChild(focusText);
+
+        const reviewTitle = document.createElement("h3");
+        reviewTitle.textContent = "答题复盘";
+        reviewTitle.style.color = "#dbe8ff";
+        reviewTitle.style.marginTop = "22px";
+        reviewEl.appendChild(reviewTitle);
+
+        if (wrongRecords.length === 0) {
+          const perfect = document.createElement("p");
+          perfect.textContent = "恭喜你，本次测试全部答对！";
+          perfect.style.color = "#9dffbf";
+          reviewEl.appendChild(perfect);
+          return;
+        }
+
+        wrongRecords.forEach(function (record, index) {
+          const question = record.question;
+          const card = document.createElement("div");
+
+          card.className = "review-card";
+
+          const title = document.createElement("div");
+          title.className = "review-card-title";
+          title.innerHTML =
+            '<span class="question-source">[来源：' +
+            question.source +
+            "]</span>" +
+            "错题 " +
+            (index + 1) +
+            "：" +
+            question.question;
+
+          const answer = document.createElement("div");
+          answer.className = "review-answer";
+          answer.innerHTML =
+            "正确答案：" +
+            getOptionLetter(record.correctIndex) +
+            "．" +
+            question.answer +
+            "<br>" +
+            "知识点：" +
+            question.knowledgePoint +
+            "<br>" +
+            "题型：" +
+            (question.type === "original" ? "真题" : "改编题") +
+            "<br>" +
+            "难度：" +
+            (question.difficulty === "low" ? "低年组" : "高年组");
+
+          const explanation = document.createElement("div");
+          explanation.className = "review-answer";
+          explanation.innerHTML =
+            "<strong>解析：</strong>" +
+            question.explanation;
+
+          card.appendChild(title);
+          card.appendChild(answer);
+          card.appendChild(explanation);
+          card.appendChild(createKnowledgeLink());
+          card.appendChild(createSimilarButton(question));
+
+          reviewEl.appendChild(card);
+        });
+      }
+
+      /* =====================================================
+         页面跳转
+         ===================================================== */
+
+      function showResult() {
+        clearTimer();
+
+        if (sessionMode === "practice") {
+          testEl.classList.add("hidden");
+          introEl.classList.remove("hidden");
+          practiceLabelEl.classList.add("hidden");
+
+          alert("补充练习完成，本题不计入总分。");
+          updateWrongButton();
+          return;
+        }
+
+        testEl.classList.add("hidden");
+        resultEl.classList.remove("hidden");
+
+        finalScoreEl.textContent =
+          "答对 " +
+          score +
+          " / " +
+          selectedQuestions.length +
+          " 题";
+
+        let modeName = "混合模拟";
+
+        if (currentMode === "low") {
+          modeName = "低年组专项";
+        } else if (currentMode === "high") {
+          modeName = "高年组专项";
+        }
+
+        resultSummaryEl.textContent =
+          "本次模式：" +
+          modeName +
+          "。错题已保存，可在封面进入错题重练。";
+
+        renderReview();
+      }
+
+      /* =====================================================
+         事件绑定
+         ===================================================== */
+
+      modeButtons.forEach(function (button) {
+        button.addEventListener("click", function () {
+          modeButtons.forEach(function (item) {
+            item.classList.remove("active");
+          });
+
+          button.classList.add("active");
+          currentMode = button.dataset.mode;
+        });
+      });
+
+      startButton.addEventListener("click", function () {
+        startNormalTest();
+      });
+
+      wrongRetryButton.addEventListener("click", function () {
+        startWrongPractice();
+      });
+
+      nextButton.addEventListener("click", function () {
+        if (!answered) {
+          return;
+        }
+
+        currentIndex++;
+
+        if (currentIndex >= selectedQuestions.length) {
+          showResult();
+        } else {
+          renderQuestion();
+        }
+      });
+
+      retryButton.addEventListener("click", function () {
+        clearTimer();
+
+        resultEl.classList.add("hidden");
+        testEl.classList.add("hidden");
+        introEl.classList.remove("hidden");
+        practiceLabelEl.classList.add("hidden");
+
+        updateWrongButton();
+      });
+
+      updateWrongButton();
+    });
+  </script>
+</body>
+</html>
